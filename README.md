@@ -1,52 +1,52 @@
-# Raspberry Pi Real-Time Guitar Multi-Effects Processor
+# 基於 Raspberry Pi 的即時吉他多音效處理器
 
-This project turns a Raspberry Pi and a Behringer U-PHORIA UM2 USB audio interface into a real-time electric guitar multi-effects processor.
+本專題使用 Raspberry Pi 與 Behringer U-PHORIA UM2 USB 音訊介面，實作一套即時電吉他多音效處理器。
 
-The system captures guitar input through the UM2, processes the signal in Python with real-time DSP effects, and outputs the processed sound back through the UM2 headphone output.
+系統會透過 UM2 接收吉他輸入訊號，再由 Python 程式進行即時數位音訊處理，最後將處理後的聲音輸出到 UM2 的耳機輸出端。
 
-## Project Motivation
+## 專題動機
 
-Traditional guitar multi-effects processors and individual effect pedals can be expensive, especially when building a complete sound system with distortion, delay, modulation, and recording equipment. This project explores a lower-cost approach by using Raspberry Pi as the embedded Linux processing platform and the Behringer UM2 as the USB audio interface.
+傳統吉他綜合效果器與單顆效果器價格較高，若要組成完整音色系統，通常需要破音、Delay、Modulation、錄音介面與音箱模擬等多種設備，整體成本會明顯提高。因此，本專題希望以 Raspberry Pi 作為嵌入式 Linux 處理平台，搭配 Behringer UM2 USB 音訊介面，建立一套低成本、可自由擴充的吉他效果器系統。
 
-The goal is to combine embedded systems, Linux audio, USB audio input/output, and digital signal processing into one practical guitar effects project. Instead of relying on fixed commercial hardware, the system can be modified through software, making it easier to add new effects, change parameters, and extend the hardware controls in the future.
+本專題的核心目標是將嵌入式系統、Linux 音訊輸入輸出、USB Audio Interface 與數位訊號處理整合成一個實際可操作的音樂應用。相較於固定功能的商用硬體，本系統可以透過修改程式加入新的音效、調整參數，未來也能延伸加入腳踏開關、LED 顯示與旋鈕控制。
 
-## Demo Preview
+## 成果預覽
 
 ![Raspberry Pi running the guitar multi-effect program](images/program-running-effects-menu.jpg)
 
-The terminal interface shows the available effect modes, the current effect, the current gain value, and real-time effect switching. In this example, the program is running on Raspberry Pi and the effect has been switched to Overdrive.
+上圖為 Raspberry Pi 終端機執行吉他多音效程式的畫面。終端機會顯示可用音效模式、目前音效、目前 gain 值，以及即時音效切換結果。圖中程式已在 Raspberry Pi 上成功執行，並將音效切換為 Overdrive。
 
-## Hardware
+## 硬體需求
 
 - Raspberry Pi
-- Behringer U-PHORIA UM2 USB audio interface
-- Electric guitar
-- 6.3 mm guitar cable
-- Headphones or powered speaker
+- Behringer U-PHORIA UM2 USB 音訊介面
+- 電吉他
+- 6.3 mm 吉他導線
+- 耳機或主動式喇叭
 
-Recommended UM2 connection:
+建議接線方式：
 
 ```text
-Electric guitar
+電吉他
   -> UM2 INST 2 input
   -> USB to Raspberry Pi
   -> Python real-time DSP
   -> UM2 headphone output
-  -> Headphones / speaker
+  -> 耳機 / 喇叭
 ```
 
-UM2 notes:
+UM2 使用注意事項：
 
-- Plug the guitar into `INST 2`.
-- Keep `DIRECT MONITOR` off when testing processed effects.
-- Do not enable `+48V` phantom power for electric guitar.
-- Start with low `INST 2 GAIN` and `OUTPUT`, then increase slowly.
+- 電吉他建議接到 `INST 2`。
+- 測試處理後音效時，建議關閉 `DIRECT MONITOR`。
+- 電吉他不需要開啟 `+48V` phantom power。
+- `INST 2 GAIN` 與 `OUTPUT` 建議先從小音量開始，再慢慢增加。
 
-## Effects
+## 音效功能
 
-Current keyboard controls:
+目前鍵盤控制如下：
 
-| Key | Effect |
+| 按鍵 | 音效 |
 | --- | --- |
 | `1` | Clean |
 | `2` | Overdrive |
@@ -63,51 +63,51 @@ Current keyboard controls:
 | `+` | Gain Up |
 | `-` | Gain Down |
 
-## Waveform Analysis
+## 波形分析
 
 ![All guitar effect waveform comparison](images/waveforms/waveform-all-effects.png)
 
-Each effect changes the input waveform in a different way. Overdrive and distortion reshape the waveform through clipping, delay and reverb use buffers to mix past audio samples back into the output, and modulation effects such as tremolo, ring mod, and auto wah use low-frequency oscillators to create movement.
+不同音效會以不同方式改變輸入波形。Overdrive 與 Distortion 透過增益放大與 clipping 改變波形形狀；Delay 與 Reverb 透過 buffer 將過去的聲音重新混入輸出；Tremolo、Ring Mod 與 Auto Wah 則使用低頻振盪器產生週期性變化。
 
-More detailed formulas and individual waveform figures are available in [docs/effect_formulas_waveforms.md](docs/effect_formulas_waveforms.md).
+更完整的公式與個別波形圖可參考 [docs/effect_formulas_waveforms.md](docs/effect_formulas_waveforms.md)。
 
-## Setup
+## 安裝方式
 
-Install dependencies:
+安裝 Python 套件：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Check audio devices on the Raspberry Pi:
+在 Raspberry Pi 上確認音訊裝置：
 
 ```bash
 python -m sounddevice
 ```
 
-If the UM2 device index is different on your Raspberry Pi, edit this line in `src/distortion.py`:
+如果 UM2 在 Raspberry Pi 上的裝置編號不同，請修改 `src/distortion.py` 中這行：
 
 ```python
 sd.default.device = (2, 2)
 ```
 
-The first number is the input device index, and the second number is the output device index.
+第一個數字代表輸入裝置編號，第二個數字代表輸出裝置編號。
 
-## Run
+## 執行方式
 
 ```bash
 python src/distortion.py
 ```
 
-For demo testing, a clear effect order is:
+Demo 時建議切換順序：
 
 ```text
 1 Clean -> 2 Overdrive -> 3 Distortion -> 4 Fuzz -> 6 Delay -> 5 Tremolo -> 0 Auto Wah
 ```
 
-For delay, play a short note and stop. The echo is easier to hear after the original note ends.
+測試 Delay 時，建議彈一個短音後停住，這樣比較容易聽到回音。
 
-## Project Structure
+## 專案結構
 
 ```text
 rpi-guitar-effects/
@@ -132,33 +132,33 @@ rpi-guitar-effects/
     +-- README.md
 ```
 
-## Technical Highlights
+## 技術重點
 
 - Raspberry Pi Embedded Linux
-- USB audio interface integration
-- Real-time audio streaming with `sounddevice`
-- Digital signal processing with `numpy`
-- Distortion, clipping, delay buffer, tremolo, and modulation effects
-- Low-latency audio tuning with sample rate and block size settings
-- Formula and waveform analysis for each audio effect
+- USB audio interface 整合
+- 使用 `sounddevice` 進行即時音訊串流
+- 使用 `numpy` 進行數位訊號處理
+- Distortion、clipping、delay buffer、tremolo 與 modulation 音效實作
+- 透過 sampling rate 與 block size 調整低延遲音訊處理
+- 各音效公式與波形分析
 
-## Challenges and Solutions
+## 遇到的困難與解決方式
 
-| Challenge | Solution |
+| 遇到的問題 | 解決方式 |
 | --- | --- |
-| USB audio device index may change between systems | Use `python -m sounddevice` to check available devices and update `sd.default.device` in the program. |
-| Guitar input may only appear on one channel | Mix the stereo input into mono with `np.mean(indata, axis=1)`, then copy the processed output to both left and right channels. |
-| Distortion and fuzz can produce clipping noise | Limit the final output with `np.clip(y, -1.0, 1.0)` to keep the signal inside the valid audio range. |
-| Delay was not obvious at first | Increase `delay_time`, `delay_feedback`, and `delay_mix` so the echo becomes easier to hear during the demo. |
-| Lower latency can increase CPU load | Tune `blocksize` carefully. Smaller values reduce latency, while larger values improve stability on Raspberry Pi. |
+| USB 音訊裝置編號可能在不同系統中改變 | 使用 `python -m sounddevice` 查詢目前可用音訊裝置，並更新程式中的 `sd.default.device`。 |
+| 吉他輸入可能只出現在單邊聲道 | 使用 `np.mean(indata, axis=1)` 將輸入混成 mono，再將處理後聲音複製到左右聲道輸出。 |
+| Distortion 與 Fuzz 容易造成爆音或 clipping | 使用 `np.clip(y, -1.0, 1.0)` 限制最終輸出範圍，避免訊號超過有效音訊區間。 |
+| Delay 一開始聽起來不明顯 | 調高 `delay_time`、`delay_feedback` 與 `delay_mix`，讓回音時間、回授量與效果比例更明顯。 |
+| 降低 latency 會增加 Raspberry Pi 運算負擔 | 調整 `blocksize` 取得平衡。較小的 blocksize 可降低延遲，較大的 blocksize 則能提高穩定性。 |
 
-These issues helped shape the final implementation. The project now handles stereo output correctly, provides clearer delay sound, protects against extreme clipping, and keeps the audio stream stable enough for real-time guitar testing.
+這些問題也影響了最後的系統設計。最終版本已能正確處理左右耳輸出、讓 Delay 效果更明顯、避免過度 clipping，並讓音訊串流在 Raspberry Pi 上保持可用的即時穩定性。
 
-## Next Steps
+## 未來改進方向
 
-- Add GPIO footswitch for effect bypass
-- Add LED status indicator
-- Add ADC potentiometer controls for gain, volume, and tone
-- Improve chorus with modulated delay
-- Add tone filter and noise gate
-- Record demo videos and sound samples
+- 加入 GPIO 腳踏開關控制 bypass
+- 加入 LED 顯示目前效果狀態
+- 加入 ADC 旋鈕控制 gain、volume 與 tone
+- 改善 Chorus，使用 LFO 調變 delay time
+- 加入 tone filter 與 noise gate
+- 錄製 demo 影片與音訊範例
