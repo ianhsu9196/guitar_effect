@@ -71,6 +71,124 @@ UM2 使用注意事項：
 
 更完整的公式與個別波形圖可參考 [docs/effect_formulas_waveforms.md](docs/effect_formulas_waveforms.md)。
 
+## 核心程式碼
+
+完整程式可參考 [src/distortion.py](src/distortion.py)。以下節錄本專題最重要的即時音訊處理流程。
+
+### 音訊裝置與基本參數
+
+```python
+import sounddevice as sd
+import numpy as np
+
+# UM2 / USB Audio CODEC
+sd.default.device = (2, 2)
+
+samplerate = 44100
+blocksize = 512
+
+effect = "3"
+gain = 10.0
+volume = 0.45
+```
+
+這段程式設定 UM2 作為輸入與輸出音訊裝置，取樣率使用 `44100 Hz`，也就是常見 CD 音質規格。`blocksize` 代表每次即時處理的音訊資料量，數值越小延遲越低，但 Raspberry Pi 的運算負擔也會提高。
+
+### 音效處理函式
+
+```python
+def soft_clip(x):
+    return np.tanh(x)
+
+def hard_clip(x):
+    return np.clip(x, -1.0, 1.0)
+
+def process_audio(x):
+    if effect == "1":
+        y = x
+
+    elif effect == "2":
+        y = soft_clip(x * gain)
+
+    elif effect == "3":
+        y = hard_clip(x * gain)
+
+    elif effect == "4":
+        z = x * gain
+        y = np.sign(z) * (1 - np.exp(-np.abs(z)))
+
+    else:
+        y = x
+
+    return y * volume
+```
+
+`process_audio()` 是音效器的核心。Clean 模式直接輸出原始訊號；Overdrive 使用 `tanh()` 產生較平滑的 soft clipping；Distortion 使用 `np.clip()` 直接限制波形範圍；Fuzz 則使用更強烈的非線性轉換，讓聲音更粗糙。
+
+### Delay / Echo 核心
+
+```python
+delay_time = 0.45
+delay_feedback = 0.65
+delay_mix = 0.75
+
+delay_buffer = np.zeros(int(samplerate * 2))
+delay_index = 0
+
+def delay_effect(x):
+    global delay_index
+
+    y = np.zeros_like(x)
+    delay_samples = int(delay_time * samplerate)
+
+    for i in range(len(x)):
+        read_index = (delay_index - delay_samples) % len(delay_buffer)
+        delayed = delay_buffer[read_index]
+
+        y[i] = (1 - delay_mix) * x[i] + delay_mix * delayed
+        delay_buffer[delay_index] = x[i] + delayed * delay_feedback
+
+        delay_index = (delay_index + 1) % len(delay_buffer)
+
+    return y
+```
+
+Delay 效果使用 circular buffer 儲存過去的聲音，再於指定時間後讀取出來與目前輸入混合。`delay_time` 控制回音間隔，`delay_feedback` 控制回音重複次數，`delay_mix` 控制原音與回音的比例。
+
+### 即時音訊 Callback
+
+```python
+def callback(indata, outdata, frames, time_info, status):
+    if status:
+        print(status)
+
+    mono = np.mean(indata, axis=1)
+    y = process_audio(mono)
+    y = np.clip(y, -1.0, 1.0)
+
+    outdata[:, 0] = y
+    outdata[:, 1] = y
+```
+
+`callback()` 是即時音訊串流的關鍵。每當 UM2 收到一小段吉他訊號時，`sounddevice` 會呼叫此函式。程式會先將輸入混成 mono，再送進 `process_audio()` 套用音效，最後將處理後的聲音複製到左右聲道輸出，確保耳機兩邊都有聲音。
+
+### 啟動音訊串流
+
+```python
+with sd.Stream(
+    samplerate=samplerate,
+    blocksize=blocksize,
+    channels=2,
+    dtype="float32",
+    callback=callback,
+):
+    while True:
+        key = get_key()
+        # 根據鍵盤輸入切換音效或調整 gain
+```
+
+這段程式開啟即時音訊串流，使系統能持續接收吉他輸入、即時處理音效並輸出到耳機。同時，主迴圈會讀取鍵盤按鍵，讓使用者能在演奏過程中切換音效。
+
 ## 安裝方式
 
 安裝 Python 套件：
