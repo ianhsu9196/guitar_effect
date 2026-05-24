@@ -4,6 +4,12 @@ This project turns a Raspberry Pi and a Behringer U-PHORIA UM2 USB audio interfa
 
 The system captures guitar input through the UM2, processes the signal in Python with real-time DSP effects, and outputs the processed sound back through the UM2 headphone output.
 
+## Demo Preview
+
+![Raspberry Pi running the guitar multi-effect program](images/program-running-effects-menu.jpg)
+
+The terminal interface shows the available effect modes, the current effect, the current gain value, and real-time effect switching. In this example, the program is running on Raspberry Pi and the effect has been switched to Overdrive.
+
 ## Hardware
 
 - Raspberry Pi
@@ -50,6 +56,14 @@ Current keyboard controls:
 | `w` | Octave Up |
 | `+` | Gain Up |
 | `-` | Gain Down |
+
+## Waveform Analysis
+
+![All guitar effect waveform comparison](images/waveforms/waveform-all-effects.png)
+
+Each effect changes the input waveform in a different way. Overdrive and distortion reshape the waveform through clipping, delay and reverb use buffers to mix past audio samples back into the output, and modulation effects such as tremolo, ring mod, and auto wah use low-frequency oscillators to create movement.
+
+More detailed formulas and individual waveform figures are available in [docs/effect_formulas_waveforms.md](docs/effect_formulas_waveforms.md).
 
 ## Setup
 
