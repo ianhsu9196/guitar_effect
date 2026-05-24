@@ -4,6 +4,12 @@ This project turns a Raspberry Pi and a Behringer U-PHORIA UM2 USB audio interfa
 
 The system captures guitar input through the UM2, processes the signal in Python with real-time DSP effects, and outputs the processed sound back through the UM2 headphone output.
 
+## Project Motivation
+
+Traditional guitar multi-effects processors and individual effect pedals can be expensive, especially when building a complete sound system with distortion, delay, modulation, and recording equipment. This project explores a lower-cost approach by using Raspberry Pi as the embedded Linux processing platform and the Behringer UM2 as the USB audio interface.
+
+The goal is to combine embedded systems, Linux audio, USB audio input/output, and digital signal processing into one practical guitar effects project. Instead of relying on fixed commercial hardware, the system can be modified through software, making it easier to add new effects, change parameters, and extend the hardware controls in the future.
+
 ## Demo Preview
 
 ![Raspberry Pi running the guitar multi-effect program](images/program-running-effects-menu.jpg)
@@ -135,6 +141,18 @@ rpi-guitar-effects/
 - Distortion, clipping, delay buffer, tremolo, and modulation effects
 - Low-latency audio tuning with sample rate and block size settings
 - Formula and waveform analysis for each audio effect
+
+## Challenges and Solutions
+
+| Challenge | Solution |
+| --- | --- |
+| USB audio device index may change between systems | Use `python -m sounddevice` to check available devices and update `sd.default.device` in the program. |
+| Guitar input may only appear on one channel | Mix the stereo input into mono with `np.mean(indata, axis=1)`, then copy the processed output to both left and right channels. |
+| Distortion and fuzz can produce clipping noise | Limit the final output with `np.clip(y, -1.0, 1.0)` to keep the signal inside the valid audio range. |
+| Delay was not obvious at first | Increase `delay_time`, `delay_feedback`, and `delay_mix` so the echo becomes easier to hear during the demo. |
+| Lower latency can increase CPU load | Tune `blocksize` carefully. Smaller values reduce latency, while larger values improve stability on Raspberry Pi. |
+
+These issues helped shape the final implementation. The project now handles stereo output correctly, provides clearer delay sound, protects against extreme clipping, and keeps the audio stream stable enough for real-time guitar testing.
 
 ## Next Steps
 
